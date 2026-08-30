@@ -1,0 +1,96 @@
+{
+  "name": "@antdv-next/docs-plugins",
+  "type": "module",
+  "version": "0.1.0",
+  "private": false,
+  "packageManager": "pnpm@10.34.5",
+  "description": "Shared vite / markdown-it plugins and demo components for antdv-next docs sites",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./dist/*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "default": "./dist/*.js"
+    },
+    "./component/*": {
+      "types": "./src/components/*.d.ts",
+      "import": "./src/components/*"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "src",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm typecheck && pnpm lint && pnpm build"
+  },
+  "dependencies": {
+    "@mdit-vue/plugin-frontmatter": "^3.0.2",
+    "@mdit-vue/plugin-headers": "^3.0.2",
+    "@mdit-vue/plugin-title": "^3.0.2",
+    "@mdit-vue/plugin-toc": "^3.0.2",
+    "@mdit-vue/shared": "^3.0.2",
+    "@mdit-vue/types": "^3.0.2",
+    "@shikijs/markdown-it": "^4.4.1",
+    "@shikijs/transformers": "^4.4.1",
+    "lru-cache": "^11.5.2",
+    "markdown-it": "^14.3.0",
+    "markdown-it-anchor": "^9.2.1",
+    "markdown-it-async": "^2.2.0",
+    "markdown-it-attrs": "^4.5.0",
+    "markdown-it-container": "^4.0.0",
+    "markdown-it-emoji": "^3.1.0",
+    "mlly": "^1.8.2",
+    "nanoid": "^5.1.16",
+    "oxfmt": "^0.41.0",
+    "pathe": "^2.0.3",
+    "picomatch": "^4.0.5",
+    "postcss-selector-parser": "^7.1.4",
+    "shiki": "^4.4.1",
+    "vite": "^8.2.0",
+    "vue": "^3.5.40"
+  },
+  "devDependencies": {
+    "@antdv-next/icons": "^1.1.1",
+    "@antfu/eslint-config": "^7.7.3",
+    "@codesandbox/sandpack-themes": "^2.0.21",
+    "@types/markdown-it": "14.1.2",
+    "@types/markdown-it-attrs": "^4.1.3",
+    "@types/markdown-it-container": "^2.0.11",
+    "@types/node": "^25.9.5",
+    "@types/picomatch": "^4.0.3",
+    "@vue/compiler-sfc": "^3.5.40",
+    "@vue/tsconfig": "^0.8.1",
+    "@vueuse/core": "^14.4.0",
+    "antdv-style": "^1.0.0-rc.1",
+    "eslint": "^9.39.5",
+    "postcss": "^8.5.25",
+    "sandpack-vue3": "^3.1.12",
+    "sucrase": "^3.35.1",
+    "tsdown": "^0.22.14",
+    "typescript": "~5.9.3",
+    "vue-router": "^4.6.4"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/antdv-next/docs-plugins.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
