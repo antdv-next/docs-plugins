@@ -160,14 +160,15 @@ const useStyles = createStyles(({ token }) => ({
         },
         // CodeMirror 挂载/聚焦时首行会带激活行样式与聚焦描边,与 antdv-next 原
         // code-demo 一致地隐藏,避免展开/收起代码时首行出现样式变化
+        // (选择器特异性足够,无需 !important)
         '& .cm-activeLine, & .cm-activeLineGutter': {
-          background: 'transparent !important',
+          background: 'transparent',
         },
         '&.cm-focused': {
           outline: 'none',
         },
         '&.cm-focused .cm-activeLine, &.cm-focused .cm-activeLineGutter': {
-          background: 'transparent !important',
+          background: 'transparent',
         },
       },
       '& .cm-gutters': {
