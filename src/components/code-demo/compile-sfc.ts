@@ -20,7 +20,10 @@ async function ensureDependencies(extraModules: Record<string, () => Promise<any
       Object.entries(extraModules).map(async ([name, loader]) => {
         try {
           const mod = await loader()
-          resolved[name] = (mod as any).default || mod
+          // 保存模块命名空间:命名导入从空间上取(default 导入经 transformCode 的
+          // `mod.default || mod` 兜底)。取 mod.default 会丢掉命名导出(如 icons 的
+          // 836 个图标,其 default 只是单个图标组件)。
+          resolved[name] = mod
         }
         catch {
           // 依赖不可用时跳过，保持 modulesMap 中无该条目
@@ -36,6 +39,42 @@ function buildModulesMap(extraModules: Record<string, () => Promise<any>>) {
     vue: Vue,
     ...resolvedExtraModules.get(extraModules),
   }
+}
+
+/**
+ * 从模块命名空间收集组件,建立 名称/kebab/camel 三种索引。
+ * 模板里 `<a-avatar>` / `<ax-bubble>` 经编译为 _resolveComponent("a-avatar"),
+ * 运行时解析需要站点全局注册;这里在编译期直接映射到模块里的 AAvatar/AxBubble,
+ * 使在线编辑不依赖站点全量注册(保留按需引入与摇树)。
+ */
+function buildComponentsMap(modulesMap: Record<string, any>): Record<string, unknown> {
+  const comps: Record<string, unknown> = {}
+  for (const mod of Object.values(modulesMap)) {
+    if (!mod || typeof mod !== 'object')
+      continue
+    for (const value of Object.values(mod)) {
+      if (!value || typeof value !== 'object' || !('name' in value))
+        continue
+      const name = value.name
+      if (typeof name !== 'string' || !name)
+        continue
+      comps[name] = value
+      // 与 vue 的 hyphenate 一致:AAvatar -> a-avatar,AxBubble -> ax-bubble
+      const kebab = name.replace(/\B([A-Z])/g, '-$1').toLowerCase()
+      comps[kebab] = value
+      comps[kebab.replace(/-(\w)/g, (_, c: string) => c.toUpperCase())] = value
+    }
+  }
+  return comps
+}
+
+/** 把 _resolveComponent("name") 替换为组件映射查找,未命中时回退运行时解析 */
+function injectComponentResolution(code: string): string {
+  return code.replace(
+    /_resolveComponent\(\s*(['"])([^'"]+)\1(?:,([^)]*))?\)/g,
+    (_, quote: string, name: string, rest?: string) =>
+      `(__componentsMap[${quote}${name}${quote}] || _resolveComponent(${quote}${name}${quote}${rest ? `,${rest}` : ''}))`,
+  )
 }
 
 function transformCode(code: string): string {
@@ -179,11 +218,15 @@ export async function compileSfcSource(
     // Transform imports / exports to work with new Function
     jsCode = transformCode(jsCode)
 
+    // 编译期组件解析:模板中的 <a-*>/<ax-*> 映射到模块内的组件,不依赖站点全局注册
+    const componentsMap = buildComponentsMap(modulesMap)
+    jsCode = injectComponentResolution(jsCode)
+
     // Evaluate the compiled code
     const __exports__: Record<string, any> = {}
     // eslint-disable-next-line no-new-func
-    const fn = new Function('__modules__', '__exports__', jsCode)
-    fn(modulesMap, __exports__)
+    const fn = new Function('__modules__', '__componentsMap', '__exports__', jsCode)
+    fn(modulesMap, componentsMap, __exports__)
 
     // For options API + separate template, attach the render function
     if (!descriptor.scriptSetup && descriptor.script && descriptor.template) {

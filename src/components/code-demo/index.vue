@@ -6,6 +6,7 @@ import { aquaBlue, atomDark } from '@codesandbox/sandpack-themes'
 import { useClipboard, useDebounceFn } from '@vueuse/core'
 import { Alert, Flex, Skeleton, Spin, Tabs, Tooltip } from 'antdv-next'
 import { createStyles } from 'antdv-style'
+import { SandpackProvider } from 'sandpack-vue3'
 import { loadDemo } from 'virtual:demos'
 import { computed, defineAsyncComponent, markRaw, nextTick, onBeforeUnmount, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -140,9 +141,42 @@ const useStyles = createStyles(({ token }) => ({
       color: token.colorTextTertiary,
     },
     '& .ant-doc-demo-box-code': {
-      position: 'relative',
-      lineHeight: 2,
-      padding: `${token.paddingSM}px ${token.padding}px`,
+      'position': 'relative',
+      'lineHeight': 2,
+      'padding': `${token.paddingSM}px ${token.padding}px`,
+      // 与 antdv-next 原 code-demo 一致:去除 sandpack 默认表面样式并隐藏 Run 按钮
+      '& .sp-wrapper': {
+        background: 'transparent !important',
+      },
+      '& .sp-layout': {
+        background: 'transparent !important',
+        border: 'none !important',
+      },
+      '& .cm-editor': {
+        'background': 'transparent',
+        'fontSize': 14,
+        '& .cm-content': {
+          lineHeight: 2,
+        },
+        '& .cm-activeLine, & .cm-activeLineGutter': {
+          background: 'transparent',
+        },
+      },
+      '& .cm-gutters': {
+        background: 'transparent',
+        border: 'none',
+      },
+      '& .sp-stack': {
+        height: 'auto !important',
+        background: 'transparent',
+      },
+      '& [class*="sp-code-editor"]': {
+        background: 'transparent !important',
+      },
+      // 隐藏 sandpack 内置 Run 按钮与只读徽标
+      '& .sp-button, & .sp-read-only': {
+        display: 'none',
+      },
     },
     '& .ant-doc-demo-box-code-loading': {
       display: 'flex',
@@ -185,16 +219,6 @@ const useStyles = createStyles(({ token }) => ({
     },
     '& .ant-doc-demo-box-code-copied': {
       color: token.colorSuccess,
-    },
-    '& .ant-doc-demo-box-collapse-btn': {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      padding: '8px 0',
-      borderTop: `1px dashed ${token.colorSplit}`,
-      color: token.colorTextSecondary,
-      cursor: 'pointer',
     },
   },
 }))
@@ -293,6 +317,9 @@ const hasJsSource = computed(() => {
 })
 
 const extraFiles = computed<DemoExtraFile[]>(() => sourceData.value?.extraFiles ?? [])
+
+// 与线上一致:仅当存在 JS 版本或伴生文件时才显示代码页签栏
+const hasCodeTabs = computed(() => hasJsSource.value || extraFiles.value.length > 0)
 
 const codeTabKeys = computed(() => {
   const keys: string[] = ['ts']
@@ -516,10 +543,20 @@ async function handleStackBlitz() {
   }
 }
 
-function handleOpenPlayground() {
+async function handleOpenPlayground() {
   if (!context.openPlayground)
     return
-  context.openPlayground(mainSourceCode.value)
+  // 与线上一致:面板未展开过时先加载源码,失败则展开面板展示错误
+  try {
+    await ensureSourceLoaded()
+  }
+  catch {
+    showCode.value = true
+    return
+  }
+  if (mainSourceCode.value) {
+    context.openPlayground(mainSourceCode.value)
+  }
 }
 
 const demoStyle = computed(() => {
@@ -540,6 +577,17 @@ const { copied, copy } = useClipboard({
   source: copySource,
   legacy: true,
 })
+
+// 与线上一致:操作栏复制按钮在面板未展开时也可用(先加载源码再复制)
+async function handleCopy() {
+  try {
+    await ensureSourceLoaded()
+    await copy()
+  }
+  catch {
+    showCode.value = true
+  }
+}
 
 const cls = computed(() => {
   const cls: string[] = []
@@ -588,7 +636,13 @@ const cls = computed(() => {
           <a ref="titleRef" :href="`#${id}`" @click="handleScroll">
             <slot />
           </a>
-          <a target="_blank" rel="noopener" class="ant-doc-demo-box-edit-icon">
+          <a
+            v-if="context.editUrl"
+            class="ant-doc-demo-box-edit-icon"
+            :href="context.editUrl(id)"
+            target="_blank"
+            rel="noopener"
+          >
             <EditOutlined />
           </a>
         </div>
@@ -596,6 +650,12 @@ const cls = computed(() => {
           <div v-html="description" />
         </div>
         <Flex class="ant-doc-demo-box-actions" wrap gap="middle">
+          <div v-if="context.copyCode !== false" class="ant-doc-demo-box-code-action" @click="handleCopy">
+            <Tooltip :title="t(`action.${copied ? 'copied' : 'copy'}`)">
+              <CheckOutlined v-if="copied" />
+              <CopyOutlined v-else />
+            </Tooltip>
+          </div>
           <a v-if="context.openStackBlitz" class="ant-doc-demo-box-code-action" @click="handleStackBlitz">
             <Tooltip :title="t('action.stackblitz')">
               <ThunderboltOutlined />
@@ -636,7 +696,7 @@ const cls = computed(() => {
         </div>
         <!-- 正常展示 -->
         <template v-else>
-          <div class="ant-doc-demo-box-code-tabs">
+          <div v-if="hasCodeTabs" class="ant-doc-demo-box-code-tabs">
             <Tabs
               v-model:active-key="activeCodeType"
               centered
@@ -669,11 +729,6 @@ const cls = computed(() => {
                 @update:code="handleCodeChange"
               />
             </SandpackProvider>
-          </div>
-          <!-- Collapse button at bottom -->
-          <div class="ant-doc-demo-box-collapse-btn" @click="handleShowCode">
-            <ExpandIcon :expanded="showCode" />
-            <span>{{ t('action.expandedCode') }}</span>
           </div>
         </template>
       </template>

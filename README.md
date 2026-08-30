@@ -68,7 +68,8 @@ provideDemoContext({
     '@antdv-next/icons': () => import('@antdv-next/icons'),
   },
   openPlayground: code => window.open(loadPlaygroundUrl(code), '_blank'),
-  // openStackBlitz / demoPageUrl / iframeRenderer / preferredCodeType 可选
+  // openStackBlitz / demoPageUrl / editUrl / iframeRenderer / preferredCodeType 可选
+  // copyCode: false 可隐藏操作栏复制按钮(默认显示)
 })
 ```
 
@@ -79,7 +80,7 @@ provideDemoContext({
 ```
 
 - 展开代码面板即得可编辑编辑器(Sandpack),编辑内容经 `@vue/compiler-sfc` + `sucrase` 在浏览器端实时编译并替换预览
-- 未提供的能力(如 StackBlitz)对应按钮自动隐藏
+- 操作栏按钮全部由站点能力驱动:未提供的能力(如 StackBlitz)对应按钮自动隐藏;复制按钮默认显示,`copyCode: false` 可关闭;标题区编辑图标由 `editUrl` 提供时显示
 
 建议在 vite 中对这些依赖做 `resolve.dedupe`,保证与站点共享同一实例:
 

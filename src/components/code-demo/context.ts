@@ -32,6 +32,10 @@ export interface DemoContext {
   openStackBlitz?: (options: { title: string, code: string }) => void
   /** demo 独立页地址（不提供则隐藏按钮） */
   demoPageUrl?: (id: string) => string
+  /** 源码编辑地址（不提供则隐藏标题区编辑图标） */
+  editUrl?: (id: string) => string
+  /** 操作栏是否显示复制按钮（默认 true） */
+  copyCode?: boolean
   /** iframe 模式渲染器（不提供则忽略 iframe 属性） */
   iframeRenderer?: (id: string, height?: string) => any
   /** 记住 TS/JS 页签偏好（不提供则仅组件内记忆） */
