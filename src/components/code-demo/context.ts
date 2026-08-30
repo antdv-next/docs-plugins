@@ -45,7 +45,9 @@ export interface DemoContext {
   }
 }
 
-export const demoContextKey: InjectionKey<DemoContext> = Symbol('demo-context')
+// Symbol.for 全局注册:站点(或依赖预打包)可能产生多份 context 模块实例,
+// 普通 Symbol 会让 provide/inject 键不匹配导致上下文丢失
+export const demoContextKey: InjectionKey<DemoContext> = Symbol.for('antdv-next.docs-plugins.demo-context')
 
 export function provideDemoContext(context: DemoContext) {
   provide(demoContextKey, context)
