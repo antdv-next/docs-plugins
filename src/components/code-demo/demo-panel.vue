@@ -44,30 +44,33 @@ const TabPane = Tabs.TabPane
 
 const context = useDemoContext()
 
-const useStyles = createStyles(({ token }) => ({
+// 样式统一走 `--ant-*` CSS 变量（cssVar）而非解析后的 token 字面量：
+// 站点切换暗黑模式时 antdv-next 仅更新 `:root`/`.css-var-*` 上的变量值，
+// 字面量会被 emotion 缓存为固定颜色导致 demo 面板在暗黑下仍是亮色（白底白字）。
+const useStyles = createStyles(({ token, cssVar }) => ({
   root: {
     'breakInside': 'avoid',
     'display': 'flow-root',
     'overflow': 'hidden',
     'position': 'relative',
     'boxSizing': 'border-box',
-    'border': `1px solid ${token.colorSplit}`,
+    'border': `1px solid ${cssVar.colorSplit}`,
     'borderRadius': token.borderRadiusLG,
-    'background': token.colorBgContainer,
+    'background': cssVar.colorBgContainer,
     'transition': 'border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
     'margin': '16px 0',
     '&.border-primary': {
-      borderColor: token.colorPrimary,
-      boxShadow: `0 0 0 3px color-mix(in srgb, ${token.colorPrimary} 12%, transparent)`,
+      borderColor: cssVar.colorPrimary,
+      boxShadow: `0 0 0 3px color-mix(in srgb, ${cssVar.colorPrimary} 12%, transparent)`,
     },
     '&.ant-doc-demo-box-debug': {
       borderColor: '#d3adf7',
     },
     '& .ant-doc-demo-box-demo': {
       padding: '24px',
-      borderBottom: `1px solid ${token.colorSplit}`,
+      borderBottom: `1px solid ${cssVar.colorSplit}`,
       borderRadius: '8px 8px 0 0',
-      background: token.colorBgContainer,
+      background: cssVar.colorBgContainer,
     },
     '& .ant-doc-demo-box-skeleton': {
       minHeight: 160,
@@ -100,11 +103,11 @@ const useStyles = createStyles(({ token }) => ({
       marginLeft: 16,
       padding: '1px 8px',
       borderRadius: '6px 6px 0 0',
-      backgroundColor: token.colorBgContainer,
+      backgroundColor: cssVar.colorBgContainer,
       transition: 'background-color 0.4s',
     },
     '& .ant-doc-demo-box-title a': {
-      color: token.colorText,
+      color: cssVar.colorText,
       textDecoration: 'none',
       fontSize: 16,
       fontWeight: 500,
@@ -113,7 +116,7 @@ const useStyles = createStyles(({ token }) => ({
       display: 'flex',
       justifyContent: 'center',
       padding: '12px 0',
-      borderTop: `1px dashed ${token.colorSplit}`,
+      borderTop: `1px dashed ${cssVar.colorSplit}`,
       opacity: 0.7,
       transition: 'opacity 0.3s',
     },
@@ -129,16 +132,16 @@ const useStyles = createStyles(({ token }) => ({
       border: 0,
       padding: 0,
       background: 'transparent',
-      color: token.colorTextSecondary,
+      color: cssVar.colorTextSecondary,
       cursor: 'pointer',
       transition: 'color 0.24s ease',
     },
     '& .ant-doc-demo-box-code-action:hover': {
-      color: token.colorPrimary,
+      color: cssVar.colorPrimary,
     },
     '& .ant-doc-demo-box-edit-icon': {
       marginInlineStart: 4,
-      color: token.colorTextTertiary,
+      color: cssVar.colorTextTertiary,
     },
     '& .ant-doc-demo-box-code': {
       'position': 'relative',
@@ -195,14 +198,14 @@ const useStyles = createStyles(({ token }) => ({
     '& .ant-doc-demo-box-compile-error': {
       margin: 0,
       padding: '8px 16px',
-      background: token.colorErrorBg,
-      color: token.colorError,
+      background: cssVar.colorErrorBg,
+      color: cssVar.colorError,
       fontSize: 12,
       lineHeight: 1.6,
       whiteSpace: 'pre-wrap',
     },
     '& .ant-doc-demo-box-code-tabs': {
-      borderTop: `1px dashed ${token.colorSplit}`,
+      borderTop: `1px dashed ${cssVar.colorSplit}`,
     },
     '& .ant-doc-demo-box-code-tabs .ant-tabs-nav': {
       marginBottom: 0,
@@ -223,11 +226,11 @@ const useStyles = createStyles(({ token }) => ({
       border: 0,
       padding: 0,
       background: 'transparent',
-      color: token.colorIcon,
+      color: cssVar.colorIcon,
       cursor: 'pointer',
     },
     '& .ant-doc-demo-box-code-copied': {
-      color: token.colorSuccess,
+      color: cssVar.colorSuccess,
     },
   },
 }))
