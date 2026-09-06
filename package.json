@@ -1,7 +1,7 @@
 {
   "name": "@antdv-next/docs-plugins",
   "type": "module",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": false,
   "packageManager": "pnpm@10.34.5",
   "description": "Vite / markdown-it plugins and demo components for docs-base documentation sites",
