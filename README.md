@@ -98,6 +98,49 @@ resolve: {
 /// <reference types="@antdv-next/docs-plugins/component/code-demo/virtual" />
 ```
 
+## 国内镜像通道(主站 → `.cn` 镜像站)
+
+antdv-next 主站(www.antdv-next.com ⇄ www.antdv-next.cn)和 x 站
+(x.antdv-next.com ⇄ x.antdv-next.cn)之前各自维护过一份"检测到国内访问,
+就引导到镜像站"的逻辑。这份逻辑(语言 / 时区本地信号、GeoIP 回退、可达性
+探测、偏好记忆、调试与豁免开关)现在已经收敛成一份按站点配置实例化的实现;
+弹窗和文案仍然由站点自己负责,因为两个站点的弹窗方式不同。
+
+```ts
+import { createMirrorRedirect } from '@antdv-next/docs-plugins'
+
+const mirror = createMirrorRedirect({
+  mainHosts: ['antdv-next.com', 'www.antdv-next.com'],
+  mirrorOrigin: 'https://www.antdv-next.cn',
+  // 跳转前先探测镜像站能不能访问(用图片请求,跨域不需要 CORS);
+  // 不需要探测的站点可以省略这行
+  probeUrl: 'https://www.antdv-next.cn/antdv-next.png',
+})
+```
+
+```ts
+// 在组件 mounted 之后调用一次
+const decision = await mirror.getDecision()
+
+if (decision === 'redirect') {
+  mirror.redirect() // location.replace,保留 pathname/search/hash
+  return
+}
+if (decision === 'prompt') {
+  // 用站点自己的弹窗 + 文案询问;用户确认后 setPreference('accepted') 再 redirect()
+}
+```
+
+- 只有 `mainHosts` 里的权威主站域名会触发,localhost 和 preview 部署不受影响
+- 用户选过 `accepted` → 镜像站可达就自动跳转;选过 `rejected` → 跳过
+  (拒绝默认记住 30 天,可用 `rejectedTtlMs` 调整)
+- 没有偏好时,先按语言 / 时区 / `-cn` 路径打分(港/澳/台直接排除),分数不足
+  再查 GeoIP(`geoApis`,默认 boce 单接口);没配 `probeUrl` 就不探测
+- 调试:`localStorage.DEBUG = debugValue` 可强制走完整流程(含 localhost);
+  本次豁免:`?cn-redirect=off`(参数名可用 `disableSearchParam` 改)
+- `mirror.isMirrorHost(hostname)`:判断主机是否属于镜像站部署
+  (比如只在 `.cn` 镜像站展示 ICP 备案)
+
 ## 默认行为与选项
 
 | 选项 | 默认 | 说明 |
@@ -117,6 +160,7 @@ resolve: {
 - `createMarkdown` / `useMarkdown` / `loadBaseMd` / `loadShiki`(`CreateMarkdownOptions`)
 - markdown-it 插件:`container` / `demo` / `github-alerts` / `image` / `link` / `pre-wrapper` / `stackblitz` / `table`
 - `postcssIsolateStyles`:markdown 样式隔离 PostCSS 插件
+- 镜像通道:`createMirrorRedirect`(类型:`MirrorRedirectOptions` / `MirrorRedirect` / `MirrorRedirectDecision`)
 - `tsToJs` + `createOxfmtJsFormatter`:demo 源码 TS → JS 转换与格式化
 - 组件:`CodeDemo` + `provideDemoContext` / `useDemoContext`(类型:`DemoModule` / `DemoSourceData` 等)
 - 工具:`getDemoId` / `shortHash`
