@@ -98,6 +98,15 @@ resolve: {
 /// <reference types="@antdv-next/docs-plugins/component/code-demo/virtual" />
 ```
 
+## 模块汇总
+
+各功能模块的详细文档放在对应模块目录下的 `README.md`,这里只做入口汇总;
+其余插件与管线用法见上方「快速开始」与「API 总览」。
+
+| 模块 | 用途 | 详细文档 |
+| --- | --- | --- |
+| 镜像通道 `createMirrorRedirect` | 判定大陆访客并引导其切换到国内镜像站 | [`src/mirror-redirect/README.md`](src/mirror-redirect/README.md) |
+
 ## 默认行为与选项
 
 | 选项 | 默认 | 说明 |
@@ -117,6 +126,7 @@ resolve: {
 - `createMarkdown` / `useMarkdown` / `loadBaseMd` / `loadShiki`(`CreateMarkdownOptions`)
 - markdown-it 插件:`container` / `demo` / `github-alerts` / `image` / `link` / `pre-wrapper` / `stackblitz` / `table`
 - `postcssIsolateStyles`:markdown 样式隔离 PostCSS 插件
+- 镜像通道:`createMirrorRedirect`(类型:`MirrorRedirectOptions` / `MirrorRedirect` / `MirrorRedirectDecision`;详见[模块 README](src/mirror-redirect/README.md))
 - `tsToJs` + `createOxfmtJsFormatter`:demo 源码 TS → JS 转换与格式化
 - 组件:`CodeDemo` + `provideDemoContext` / `useDemoContext`(类型:`DemoModule` / `DemoSourceData` 等)
 - 工具:`getDemoId` / `shortHash`
