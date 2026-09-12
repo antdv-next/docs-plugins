@@ -221,9 +221,17 @@ function hostMatches(hostname: string, matcher: HostnameMatcher): boolean {
 function toCnSuffixPathname(pathname: string): string {
   if (pathname === '/' || pathname === '')
     return '/index-cn'
-  if (pathname.startsWith('/~demos') || pathname.endsWith('-cn'))
+
+  // Append the suffix to the path segment, not after its trailing slash.
+  // Strip the slash while checking/appending `-cn`, then restore it.
+  const hasTrailingSlash = pathname.endsWith('/')
+  const normalizedPathname = hasTrailingSlash ? pathname.slice(0, -1) : pathname
+
+  if (normalizedPathname.startsWith('/~demos') || normalizedPathname.endsWith('-cn'))
     return pathname
-  return `${pathname}-cn`
+
+  const suffixedPathname = `${normalizedPathname}-cn`
+  return hasTrailingSlash ? `${suffixedPathname}/` : suffixedPathname
 }
 
 function readStorage(key: string): string | null {
